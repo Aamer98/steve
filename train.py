@@ -27,9 +27,9 @@ parser.add_argument('--image_size', type=int, default=128)
 parser.add_argument('--img_channels', type=int, default=3)
 parser.add_argument('--ep_len', type=int, default=3)
 
-parser.add_argument('--checkpoint_path', default='checkpoint.pt.tar')
-parser.add_argument('--data_path', default='data/*')
-parser.add_argument('--log_path', default='logs/')
+parser.add_argument('--checkpoint_path', default='/home/as26840@ens.ad.etsmtl.ca/repos/steve/logs/checkpoint.pt.tar')
+parser.add_argument('--data_path', default='/home/as26840@ens.ad.etsmtl.ca/data/MOVI/*')
+parser.add_argument('--log_path', default='/home/as26840@ens.ad.etsmtl.ca/repos/steve/logs/')
 
 parser.add_argument('--lr_dvae', type=float, default=3e-4)
 parser.add_argument('--lr_enc', type=float, default=1e-4)
