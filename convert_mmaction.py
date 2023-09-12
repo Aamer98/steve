@@ -33,7 +33,7 @@ args   = parser.parse_args()
 vid_paths = glob.glob("/home/as26840@ens.ad.etsmtl.ca/data/hmdb51/videos/*/*.avi")
 
 to_tensor = transforms.ToTensor()
-# resize_tensor = transforms.Resize((args.image_size,args.image_size))
+resize_tensor = transforms.Resize((args.image_size,args.image_size))
 
 meta_data = []
 
@@ -41,8 +41,8 @@ b = 0
 for vpath in vid_paths:
 
     print(f'Reading = {vpath}')
-    # video = vid_array(vpath)
-    # T, *_ = video.shape
+    video = vid_array(vpath)
+    T, *_ = video.shape
 
     # setup dirs
     path_vid = os.path.join(args.out_path, f"{b:08}")
@@ -53,11 +53,11 @@ for vpath in vid_paths:
     meta_data.append({'dataset':vid_m[4], 'class':vid_m[6], 'file_name':vid_m[7],
                       'folder_path_steve':path_vid})
 
-    # for t in range(T):
-    #     # breakpoint()
-    #     img = video[t]
-    #     img = to_tensor(img)
-    #     vutils.save_image(img, os.path.join(path_vid, f"{t:08}_image.png"))
+    for t in range(T):
+        # breakpoint()
+        img = video[t]
+        img = to_tensor(img)
+        vutils.save_image(img, os.path.join(path_vid, f"{t:08}_image.png"))
 
     b += 1
 

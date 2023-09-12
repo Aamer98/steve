@@ -60,10 +60,13 @@ parser.add_argument('--tau_final', type=float, default=0.1)
 parser.add_argument('--tau_steps', type=int, default=30000)
 
 parser.add_argument('--hard', action='store_true')
-parser.add_argument('--use_dp', default=True, action='store_true')
+parser.add_argument('--use_dp', default=False, action='store_true')
+
+parser.add_argument('--device', type=str, default='cuda:0')
 
 args = parser.parse_args()
 
+device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
 torch.manual_seed(args.seed)
 
 arg_str_list = ['{}={}'.format(k, v) for k, v in vars(args).items()]
@@ -105,7 +108,7 @@ else:
     best_val_loss = math.inf
     best_epoch = 0
 
-model = model.cuda()
+model = model.to(device)
 if args.use_dp:
     model = DP(model)
 
@@ -174,10 +177,10 @@ for epoch in range(start_epoch, args.epochs):
         optimizer.param_groups[1]['lr'] = lr_decay_factor * lr_warmup_factor_enc * args.lr_enc
         optimizer.param_groups[2]['lr'] = lr_decay_factor * lr_warmup_factor_dec * args.lr_dec
 
-        video = video.cuda()
+        video = video.to(device)
 
         optimizer.zero_grad()
-        
+
         (recon, cross_entropy, mse, attns) = model(video, tau, args.hard)
 
         if args.use_dp:
@@ -185,16 +188,16 @@ for epoch in range(start_epoch, args.epochs):
             cross_entropy = cross_entropy.mean()
 
         loss = mse + cross_entropy
-        
+
         loss.backward()
         clip_grad_norm_(model.parameters(), args.clip, 'inf')
         optimizer.step()
-        
+
         with torch.no_grad():
             if batch % log_interval == 0:
                 print('Train Epoch: {:3} [{:5}/{:5}] \t Loss: {:F} \t MSE: {:F}'.format(
                       epoch+1, batch, train_epoch_size, loss.item(), mse.item()))
-                
+
                 writer.add_scalar('TRAIN/loss', loss.item(), global_step)
                 writer.add_scalar('TRAIN/cross_entropy', cross_entropy.item(), global_step)
                 writer.add_scalar('TRAIN/mse', mse.item(), global_step)
@@ -208,7 +211,7 @@ for epoch in range(start_epoch, args.epochs):
         gen_video = (model.module if args.use_dp else model).reconstruct_autoregressive(video[:8])
         frames = visualize(video, recon, gen_video, attns, N=8)
         writer.add_video('TRAIN_recons/epoch={:03}'.format(epoch+1), frames)
-    
+
     with torch.no_grad():
         model.eval()
 
@@ -216,7 +219,7 @@ for epoch in range(start_epoch, args.epochs):
         val_mse = 0.
 
         for batch, video in enumerate(val_loader):
-            video = video.cuda()
+            video = video.to(device)
 
             (recon, cross_entropy, mse, attns) = model(video, tau, args.hard)
 
